@@ -2,8 +2,9 @@ var fs = require('fs');
 var union = require('union');
 var director = require('director');
 var ecstatic = require('ecstatic');
-var sass = require('node-sass');
 var router = new director.http.Router();
+var production = process.env.NODE_ENV === 'production';
+var sass = production ? false : require('node-sass');
 
 exports.router = router;
 
@@ -32,18 +33,21 @@ exports.start = function(options) {
     gzip       : false
   };
 
-  var server = union.createServer({
-    before: [
-      sass.middleware(sass_options),
-      ecstatic(ecstatic_options),
-      function (req, res) {
-        var found = router.dispatch(req, res);
-        if (!found) {
-          res.emit('next');
-        }
+  var before = [
+    ecstatic(ecstatic_options),
+    function (req, res) {
+      var found = router.dispatch(req, res);
+      if (!found) {
+        res.emit('next');
       }
-    ]
-  });
+    }
+  ];
+
+  if (!production) {
+    before.unshift(sass.middleware(sass_options));
+  }
+
+  var server = union.createServer({ before: before });
 
   server.listen(port);
 
