@@ -1,6 +1,6 @@
 var shp = require('shp');
 var server = require('./server');
-
+var port = process.env.PORT || 3000;
 var fireJson = shp.readFileSync('./data/USA_contiguous_and_Hawaii_24h');
 
 function serveData() {
@@ -9,4 +9,4 @@ function serveData() {
 }
 
 server.router.get('/data', serveData);
-server.start({ name: 'rim fire' });
+server.start({ name: 'rim fire', port: port });
